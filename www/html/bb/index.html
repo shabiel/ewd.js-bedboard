@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/ewdLite/EWD.js"></script>
+<style>
+ table {
+   border-collapse:collapse;
+ }
+ table,th {
+   border: 1px solid black;
+ }
+ td
+ {
+   vertical-align:top;
+ }
+ td > table
+ {
+   border: none;
+ }
+ td > table > tbody > tr > td:first-child {
+  color: white; background-color: blue; font-weight: bold; padding: 5; border-radius: 5 ; white-space: nowrap;
+ }
+ td > table > tbody > tr > td.nobed { background-color: green; }
+ td > table > tbody > tr > td.oos { text-decoration:line-through; background-color: red; }
+ td > table > tbody > tr { padding-bottom: 1em; }
+ h1,h2,h3,h4,h5,h6,p,td,th,span,a { font-family: sans-serif }
+</style>
+<script>
+ EWD.application = { name: 'DGBB' };
+
+ EWD.onSocketsReady = function() {
+  DGBB.loadBB();
+ };
+
+ EWD.sockets.log = true;
+
+ DGBB = {};
+
+ DGBB.loadBB = function () {
+  EWD.sockets.sendMessage({
+	type: 'loadBB',
+	params: {
+	  ward: 'B'
+	}
+  });
+ };
+
+ DGBB.createTable = function(warddata) {
+
+ // Create Table
+  var table = document.createElement('table'),
+      tbody = document.createElement('tbody');
+
+  table.appendChild(tbody);
+
+ // Create Header Row
+  var headerrow = tbody.insertRow(-1);
+  for (var ward in warddata)
+  {
+	var th = document.createElement('th');
+	var txt = document.createTextNode(ward);
+	th.appendChild(txt);
+	headerrow.appendChild(th);
+  }
+
+  // Create Next Row; each cell will contain a new table
+  var tablesrow = tbody.insertRow(-1);
+  for (var ward in warddata)
+  {
+	var td = tablesrow.insertCell(-1);
+	var table2 = DGBB.createBedsTable(warddata[ward]);
+	td.appendChild(table2);
+	tablesrow.appendChild(td);
+  }
+
+  return table;
+ }
+
+ DGBB.createBedsTable = function (beddata)
+ {
+	
+  var table = document.createElement('table'),
+      tbody = document.createElement('tbody');
+
+  table.appendChild(tbody);
+
+  for (var bed in beddata) {
+	var tr = table.insertRow();
+
+	var td = tr.insertCell(-1);
+	var txt = beddata[bed].bedName !== null ? document.createTextNode(beddata[bed].bedName) : document.createTextNode('NO BED');
+	if (beddata[bed].bedName === null) td.setAttribute('class','nobed');
+	if (beddata[bed].OOS) td.setAttribute('class','oos');
+	td.appendChild(txt);
+
+	var td = tr.insertCell(-1);
+	var txt = beddata[bed].name ? beddata[bed].name : '';
+	var txt = beddata[bed].OOS ? txt + ' (' + beddata[bed].OOS + ')' : txt;
+	var txt = document.createTextNode(txt)
+	td.appendChild(txt)
+  }
+
+  return table;
+ }
+
+
+ EWD.onSocketMessage = function(msg) {
+  if (msg.type == 'loadBB')
+  {
+	document.getElementById('response').innerHTML = "";
+	document.getElementById('response').appendChild(DGBB.createTable(msg.message));
+  }
+ }
+ /*
+ KBAN.sendMessage = function () {
+  EWD.sockets.sendMessage({
+	type: "sendHelloWorld",
+	params: {
+	  text: 'Hello World!',
+	  sender: 'Sam',
+	  date: new Date().toUTCString()
+	}
+  });
+ };
+
+ KBAN.getMessage = function () { 
+  EWD.sockets.sendMessage({
+	type: "getHelloWorld"
+  });
+ };
+
+ EWD.onSocketMessage = function(messageObj) {
+  if (messageObj.type == 'sendHelloWorld') {
+	var text = 'Your message was successfully saved into ' + messageObj.message.savedInto;
+	document.getElementById('response').innerHTML = text;
+	setTimeout(function() {
+	  document.getElementById('response').innerHTML = '';
+	  },2000);
+  }
+  if (messageObj.type == 'getHelloWorld') {
+	var text = 'Saved message: ' + JSON.stringify(messageObj.message);
+	document.getElementById('response2').innerHTML = text;
+  }
+ };
+ */
+</script>
+
+<title>Bed Board</title>
+<body onLoad="EWD.isReady()">
+<h2>Bed Board</h2>
+<div id="response"></div>
+<!--
+<input type="button" value="Send Message" onClick="DGBB.loadBB()" />
+<input type="button" value="Retrieve Saved Message" onClick="KBAN.getMessage()" />
+<div id="response2"></div>
+-->
+</body>
+</html>
